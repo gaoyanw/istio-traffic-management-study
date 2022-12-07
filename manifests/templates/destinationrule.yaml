@@ -1,0 +1,12 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: httpserver-destination
+spec:
+  host: httpserver
+  subsets:
+{{- range $index, $version := .Values.versions }}
+  - name: v{{ $version }}
+    labels:
+      version: {{ $version | quote }}
+{{- end }}
