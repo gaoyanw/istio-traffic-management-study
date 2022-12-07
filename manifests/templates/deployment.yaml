@@ -1,23 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: httpbin
+  name: httpserver
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: httpbin
+      app: httpserver
       version: v1
   template:
     metadata:
       labels:
-        app: httpbin
+        app: httpserver
         version: v1
     spec:
-      serviceAccountName: httpbin
+      serviceAccountName: httpserver
       containers:
-      - image: docker.io/kennethreitz/httpbin
+      - image: gcr.io/yangguan-gke-dev/http-server:yangguan
         imagePullPolicy: IfNotPresent
-        name: httpbin
+        name: httpserver
         ports:
-        - containerPort: 80
+        - containerPort: 8000
