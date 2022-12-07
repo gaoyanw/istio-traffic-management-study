@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "istio-traffic-management-example.fullname" . }}
+  labels:
+    {{- include "istio-traffic-management-example.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "istio-traffic-management-example.selectorLabels" . | nindent 4 }}
