@@ -1,18 +1,19 @@
+{{- range $index, $version := .Values.versions }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: httpserver
+  name: httpserver-{{ $version }}
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: httpserver
-      version: v1
+      version: {{ $version | quote }}
   template:
     metadata:
       labels:
         app: httpserver
-        version: v1
+        version: {{ $version | quote }}
     spec:
       serviceAccountName: httpserver
       containers:
@@ -23,6 +24,8 @@ spec:
         - "/server"
         args:
         - "-version"
-        - "10"
+        - {{ $version | quote }}
         ports:
         - containerPort: 8000
+---
+{{- end }}
