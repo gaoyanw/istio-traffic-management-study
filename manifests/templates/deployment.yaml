@@ -19,5 +19,10 @@ spec:
       - image: gcr.io/yangguan-gke-dev/http-server:yangguan
         imagePullPolicy: IfNotPresent
         name: httpserver
+        command:
+        - "/server"
+        args:
+        - "-version"
+        - "10"
         ports:
         - containerPort: 8000
