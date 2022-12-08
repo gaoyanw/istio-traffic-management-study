@@ -14,6 +14,7 @@ spec:
       labels:
         app: httpserver
         version: {{ $version | quote }}
+        sidecar.istio.io/inject: "true"
     spec:
       serviceAccountName: httpserver
       containers:
