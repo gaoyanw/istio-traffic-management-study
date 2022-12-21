@@ -1,0 +1,9 @@
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: deny-version-v3
+spec:
+  selector:
+    matchLabels:
+      version: "3"
+
