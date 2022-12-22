@@ -5,9 +5,9 @@ WORKDIR /app
 COPY go.mod ./
 COPY go.sum ./
 
-COPY cmd/main.go ./cmd/main.go
+COPY cmd/httpserver/main.go ./cmd/httpserver/main.go
 
-RUN go build -o /server ./cmd/main.go
+RUN go build -o /server ./cmd/httpserver/main.go
 
 FROM gcr.io/distroless/base-debian10
 
