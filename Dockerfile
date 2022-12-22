@@ -3,6 +3,8 @@ FROM golang:1.16-buster AS builder
 WORKDIR /app
 
 COPY go.mod ./
+COPY go.sum ./
+
 COPY cmd/main.go ./cmd/main.go
 
 RUN go build -o /server ./cmd/main.go
