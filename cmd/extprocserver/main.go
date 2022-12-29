@@ -10,10 +10,12 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
+	"strings"
 	"syscall"
 	"time"
 
 	core "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
+	"github.com/golang/protobuf/proto"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -65,14 +67,16 @@ func (s *server) Process(srv pb.ExternalProcessor_ProcessServer) error {
 			return status.Errorf(codes.Unknown, "cannot receive stream request: %v", err)
 		}
 
+		log.Println("Request:")
+		for _, str := range strings.Split(proto.MarshalTextString(req), "\n") {
+			log.Printf("  %s\n", str)
+		}
+
 		resp := &pb.ProcessingResponse{}
 		switch v := req.Request.(type) {
 		case *pb.ProcessingRequest_RequestHeaders:
-			log.Printf("pb.ProcessingRequest_RequestHeaders %v \n", v)
 			r := req.Request
 			h := r.(*pb.ProcessingRequest_RequestHeaders)
-			//log.Printf("Got RequestHeaders.Attributes %v", h.RequestHeaders.Attributes)
-			//log.Printf("Got RequestHeaders.Headers %v", h.RequestHeaders.Headers)
 
 			isPOST := false
 			for _, n := range h.RequestHeaders.Headers.Headers {
@@ -83,9 +87,7 @@ func (s *server) Process(srv pb.ExternalProcessor_ProcessServer) error {
 			}
 
 			for _, n := range h.RequestHeaders.Headers.Headers {
-				log.Printf("Header %s %s", n.Key, n.Value)
 				if n.Key == "user" && isPOST {
-					log.Printf("Processing User Header")
 					rhq := &pb.HeadersResponse{
 						Response: &pb.CommonResponse{
 							HeaderMutation: &pb.HeaderMutation{
@@ -112,8 +114,6 @@ func (s *server) Process(srv pb.ExternalProcessor_ProcessServer) error {
 
 			r := req.Request
 			b := r.(*pb.ProcessingRequest_RequestBody)
-			log.Printf("   RequestBody: %s", string(b.RequestBody.Body))
-			log.Printf("   EndOfStream: %T", b.RequestBody.EndOfStream)
 			if b.RequestBody.EndOfStream {
 
 				bytesToSend := append(b.RequestBody.Body, []byte(` baaar `)...)
@@ -147,7 +147,6 @@ func (s *server) Process(srv pb.ExternalProcessor_ProcessServer) error {
 			}
 			break
 		case *pb.ProcessingRequest_ResponseHeaders:
-			log.Printf("pb.ProcessingRequest_ResponseHeaders %v \n", v)
 			r := req.Request
 			h := r.(*pb.ProcessingRequest_ResponseHeaders)
 
@@ -159,7 +158,6 @@ func (s *server) Process(srv pb.ExternalProcessor_ProcessServer) error {
 				}
 			}
 
-			log.Println("  Removing access-control-allow-* headers")
 			rhq := &pb.HeadersResponse{
 				Response: &pb.CommonResponse{
 					HeaderMutation: &pb.HeaderMutation{
@@ -191,7 +189,6 @@ func (s *server) Process(srv pb.ExternalProcessor_ProcessServer) error {
 			}
 			break
 		case *pb.ProcessingRequest_ResponseBody:
-			log.Printf("pb.ProcessingRequest_ResponseBody %v \n", v)
 			r := req.Request
 			b := r.(*pb.ProcessingRequest_ResponseBody)
 			if b.ResponseBody.EndOfStream {
