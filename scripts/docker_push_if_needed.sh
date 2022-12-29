@@ -14,6 +14,6 @@ if [[ "$existing_tags" == "[]" ]]; then
   docker build -f ./cmd/$binary/Dockerfile . -t gcr.io/$project/$binary:$tag
   docker push gcr.io/$project/$binary:$tag
 else
-  printf "tag exists"
+  printf "tag exists\n"
 fi
 
