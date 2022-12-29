@@ -11,3 +11,7 @@ docker-extprocserver:
 
 docker: docker-httpserver docker-extprocserver
 
+helm-extprocserver:
+	helm upgrade -i extprocserver -n extprocserver manifests/extprocserver \
+		--set image.tag=$(TAG)
+
