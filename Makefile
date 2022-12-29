@@ -9,6 +9,5 @@ docker: docker-httpserver docker-extprocserver
 helm: docker helm-extprocserver helm-httpserver
 
 helm-%:
-	helm upgrade -i $* -n $* manifests/extprocserver \
-		--set image.tag=$(TAG)
+	helm upgrade -i $* -n $* manifests/$* --set image.tag=$(TAG)
 
