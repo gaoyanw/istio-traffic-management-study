@@ -22,6 +22,8 @@ option java_multiple_files = true;
 option java_outer_classname = "BookstoreProto";
 option java_package = "com.google.endpoints.examples.bookstore";
 
+option go_package = "pkg/apis/bookstore";
+
 
 import "google/api/annotations.proto";
 import "google/protobuf/empty.proto";
