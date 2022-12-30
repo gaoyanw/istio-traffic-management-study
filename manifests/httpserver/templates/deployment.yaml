@@ -1,3 +1,6 @@
+{{- $chartVersion  := .Chart.AppVersion -}}
+{{- $repo  := .Values.image.repository -}}
+{{- $tag  := .Values.image.tag -}}
 {{- range $index, $version := .Values.versions }}
 apiVersion: apps/v1
 kind: Deployment
@@ -18,7 +21,7 @@ spec:
     spec:
       serviceAccountName: httpserver
       containers:
-      - image: gcr.io/yangguan-gke-dev/http-server:yangguan
+      - image: "{{ $repo }}:{{ $tag | default $chartVersion }}"
         imagePullPolicy: IfNotPresent
         name: httpserver
         command:
