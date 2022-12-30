@@ -8,7 +8,7 @@ PROTO_OUTS := $(PROTOS:.proto=.pb.go)
 docker-%:
 	./scripts/docker_push_if_needed.sh $(GCP_PROJECT) $* $(TAG)
 
-docker: docker-httpserver docker-extprocserver
+docker: docker-httpserver docker-extprocserver docker-bookstoreserver
 
 helm: docker helm-extprocserver helm-httpserver
 
