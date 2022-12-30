@@ -10,7 +10,7 @@ docker-%:
 
 docker: docker-httpserver docker-extprocserver docker-bookstoreserver
 
-helm: docker helm-extprocserver helm-httpserver
+helm: docker helm-extprocserver helm-httpserver helm-bookstoreserver
 
 helm-%:
 	helm upgrade -i $* -n $* manifests/$* --set image.tag=$(TAG) --create-namespace
