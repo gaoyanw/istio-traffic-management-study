@@ -5,18 +5,22 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"log"
 	"net"
+	"os"
 	"sync"
 
 	"github.com/golang/protobuf/ptypes/empty"
 	pb "github.com/lookuptable/istio-traffic-management-study/pkg/apis/bookstore"
 	"google.golang.org/grpc"
+	klog "k8s.io/klog/v2"
 )
 
 var port = flag.Int("port", 8080, "port number")
 
 func main() {
+	klog.InitFlags(nil)
+	klog.SetOutput(os.Stderr)
+
 	flag.Parse()
 
 	RunServer()
@@ -59,19 +63,9 @@ func (s *server) CreateShelf(ctx context.Context, req *pb.CreateShelfRequest) (*
 	sid := s.LastShelfID
 	s.Shelves[sid] = shelf
 
+	shelf.Id = sid
 	return shelf, nil
 
-}
-
-func (s *server) DeleteShelves(context.Context, *empty.Empty) (*empty.Empty, error) {
-	s.Mutex.Lock()
-	defer s.Mutex.Unlock()
-	// delete everything by reinitializing the Shelves and Books maps.
-	s.Shelves = make(map[int64]*pb.Shelf)
-	s.Books = make(map[int64]map[int64]*pb.Book)
-	s.LastShelfID = 0
-	s.LastBookID = 0
-	return nil, nil
 }
 
 func (s *server) GetShelf(ctx context.Context, req *pb.GetShelfRequest) (*pb.Shelf, error) {
@@ -92,7 +86,7 @@ func (s *server) DeleteShelf(ctx context.Context, req *pb.DeleteShelfRequest) (*
 	// delete a shelf by removing the shelf from the Shelves map and the associated books from the Books map.
 	delete(s.Shelves, req.Shelf)
 	delete(s.Books, req.Shelf)
-	return nil, nil
+	return &empty.Empty{}, nil
 }
 
 func (s *server) ListBooks(ctx context.Context, req *pb.ListBooksRequest) (*pb.ListBooksResponse, error) {
@@ -179,7 +173,7 @@ func (s *server) getBook(sid int64, bid int64) (book *pb.Book, err error) {
 func RunServer() {
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
 	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
+		klog.Fatalf("failed to listen: %v", err)
 	}
 	s := grpc.NewServer()
 	fmt.Printf("\nServer listening on port %d \n", *port)
@@ -188,6 +182,6 @@ func RunServer() {
 		Books:   map[int64]map[int64]*pb.Book{},
 	})
 	if err := s.Serve(lis); err != nil {
-		log.Fatalf("failed to serve: %v", err)
+		klog.Fatalf("failed to serve: %v", err)
 	}
 }
