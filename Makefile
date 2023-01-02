@@ -27,15 +27,12 @@ protos: $(PROTO_OUTS)
 		--go-grpc_out=require_unimplemented_servers=false:. \
 		$<
 
-descriptors: $(DESCRIPTORS)
-
-%.pb: %.proto
+manifests/bookstoreserver/bookstore.pb: pkg/apis/bookstore/bookstore.proto
 	protoc \
 		-I third_party/github.com/googleapis/googleapis/ \
 		-I pkg/ \
 		--include_source_info \
-		--go-grpc_out=. \
 		--include_imports \
-		--descriptor_set_out=descriptors/$(*F).pb \
-		$<
+		--descriptor_set_out=manifests/bookstoreserver/bookstore.pb \
+	 	pkg/apis/bookstore/bookstore.proto
 
