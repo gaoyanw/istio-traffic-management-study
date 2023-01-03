@@ -7,6 +7,7 @@ import (
 	"log"
 
 	"github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/ptypes/empty"
 	pb "github.com/lookuptable/istio-traffic-management-study/pkg/apis/bookstore"
 
 	"google.golang.org/grpc"
@@ -37,15 +38,15 @@ func main() {
 		log.Fatal(err)
 	}
 
-	if err := createBooks(ctx, c, shelf.GetId()); err != nil {
-		log.Fatal(err)
-	}
-
-	if err := listBooks(ctx, c, shelf.GetId()); err != nil {
+	if err := listShelves(ctx, c); err != nil {
 		log.Fatal(err)
 	}
 
 	if err := deleteShelf(ctx, c, shelf.GetId()); err != nil {
+		log.Fatal(err)
+	}
+
+	if err := listShelves(ctx, c); err != nil {
 		log.Fatal(err)
 	}
 }
@@ -77,6 +78,17 @@ func createBooks(ctx context.Context, c pb.BookstoreClient, shelfID int64) error
 		}
 	}
 	log.Printf("created books")
+	return nil
+}
+
+func listShelves(ctx context.Context, c pb.BookstoreClient) error {
+	resp, err := c.ListShelves(ctx, &empty.Empty{})
+	if err != nil {
+		return fmt.Errorf("list shelves: %v", err)
+	}
+	for _, s := range resp.GetShelves() {
+		log.Printf("shelf %v", s)
+	}
 	return nil
 }
 
