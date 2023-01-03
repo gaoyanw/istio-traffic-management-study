@@ -3,7 +3,7 @@
 INGRESS_IP=$(kubectl get svc -n bookstoreserver bookstoreserver -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
 PORT=${PORT:-8080}
 
-SERVER=$INGRESS_IP:$PORT
+SERVER=${SERVER:-$INGRESS_IP:$PORT}
 
 echo "Server = $SERVER"
 
