@@ -14,7 +14,10 @@ docker: docker-httpserver docker-extprocserver docker-bookstoreserver docker-boo
 helm: docker helm-extprocserver helm-httpserver helm-bookstoreserver helm-bookstorehttpserver
 
 helm-%:
-	helm upgrade -i $* -n $* manifests/$* --set image.tag=$(TAG) --create-namespace
+	helm upgrade -i $* -n $* manifests/$* \
+		--set image.tag=$(TAG) \
+		--set image.repo=gcr.io/$(GCP_PROJECT)/$* \
+		--create-namespace
 
 protos: $(PROTO_OUTS)
 
