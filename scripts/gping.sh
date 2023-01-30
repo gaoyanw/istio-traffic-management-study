@@ -1,10 +1,10 @@
 #!/bin/bash
 
+# curl the bookstore gRPC backend using two methods, first HTTP with transcoding, second use gRPC directly
 INGRESS_IP=$(kubectl get svc -n bookstoreserver bookstoreserver -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-PORT=${PORT:-8080}
+PORT=${PORT:-8080} # ${parameter:-word} if parameter is null or unset, it expands to the value of word , otherwise to the value of parameter .
 
 SERVER=${SERVER:-$INGRESS_IP:$PORT}
-
 echo "Server = $SERVER"
 
 if [[ "$1" == "grpc" ]]; then
@@ -27,4 +27,3 @@ curl -s -XDELETE $SERVER/v1/shelves/$shelf_id
 
 echo "List shelves"
 curl -s $SERVER/v1/shelves
-
