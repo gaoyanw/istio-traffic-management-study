@@ -16,7 +16,7 @@ helm: docker helm-extprocserver helm-httpserver helm-bookstoreserver helm-bookst
 helm-%:
 	helm upgrade -i $* -n $* manifests/$* \
 		--set image.tag=$(TAG) \
-		--set image.repo=gcr.io/$(GCP_PROJECT)/$* \
+		--set image.repository=gcr.io/$(GCP_PROJECT)/$* \
 		--create-namespace
 
 protos: $(PROTO_OUTS)
