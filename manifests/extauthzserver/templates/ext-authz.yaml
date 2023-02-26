@@ -2,9 +2,9 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: ext-authz-new
+  name: extauthzserver
   labels:
-    app: ext-authz
+    app: extauthzserver
 spec:
   ports:
   - name: http
@@ -14,27 +14,27 @@ spec:
     port: 9000
     targetPort: 9000
   selector:
-    app: ext-authz
+    app: extauthzserver
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ext-authz-new
+  name: extauthzserver
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: ext-authz
+      app: extauthzserver
   template:
     metadata:
       labels:
-        app: ext-authz
+        app: extauthzserver
         sidecar.istio.io/inject: "true"
     spec:
       containers:
-      - image: gcr.io/yangguan-gke-dev/extauthzserver:f5a65ff-dirty
+      - image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
         imagePullPolicy: IfNotPresent
-        name: ext-authz
+        name: extauthzserver
         ports:
         - containerPort: 8000
         - containerPort: 9000
@@ -42,8 +42,7 @@ spec:
 apiVersion: security.istio.io/v1beta1
 kind: AuthorizationPolicy
 metadata:
-  name: allow-bookstoreserver
-  namespace: default
+  name: allow-all
 spec:
 # allow all traffic 
  rules:
