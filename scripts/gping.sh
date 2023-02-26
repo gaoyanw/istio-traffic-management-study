@@ -12,18 +12,21 @@ if [[ "$1" == "grpc" ]]; then
   exit
 fi
 
+AUTH="allow"
+
 echo "Create shelf"
 create_output=$(curl -s $SERVER/v1/shelves -XPOST -H "Content-type: application/json" \
+  -H "x-ext-authz: $AUTH"\
   -d '{ "theme": "Music" }')
 echo $create_output
 
 shelf_id=$(echo $create_output | jq -r .id)
 
 echo "List shelves"
-curl -s $SERVER/v1/shelves
+curl -s $SERVER/v1/shelves   -H "x-ext-authz: $AUTH"
 
 echo "Delete shelf \"$shelf_id\""
-curl -s -XDELETE $SERVER/v1/shelves/$shelf_id
+curl -s -XDELETE $SERVER/v1/shelves/$shelf_id -H "x-ext-authz: $AUTH"
 
 echo "List shelves"
-curl -s $SERVER/v1/shelves
+curl -s $SERVER/v1/shelves -H "x-ext-authz: $AUTH"
