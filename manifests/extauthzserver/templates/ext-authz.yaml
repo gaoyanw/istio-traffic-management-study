@@ -1,0 +1,52 @@
+# this config allow or deny all traffics correctly, using the image built from main.go
+apiVersion: v1
+kind: Service
+metadata:
+  name: ext-authz-new
+  labels:
+    app: ext-authz
+spec:
+  ports:
+  - name: http
+    port: 8000
+    targetPort: 8000
+  - name: grpc
+    port: 9000
+    targetPort: 9000
+  selector:
+    app: ext-authz
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ext-authz-new
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ext-authz
+  template:
+    metadata:
+      labels:
+        app: ext-authz
+        sidecar.istio.io/inject: "true"
+    spec:
+      containers:
+      - image: gcr.io/yangguan-gke-dev/extauthzserver:f5a65ff-dirty
+        imagePullPolicy: IfNotPresent
+        name: ext-authz
+        ports:
+        - containerPort: 8000
+        - containerPort: 9000
+---
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-bookstoreserver
+  namespace: default
+spec:
+# allow all traffic 
+ rules:
+ - {}
+# # -- deny all
+#   {}

@@ -50,7 +50,7 @@ spec:
           "@type": type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthz
           grpc_service:
             google_grpc:
-              target_uri: ext-authz.ext-authz.svc.cluster.local:9000
+              target_uri: ext-authz-new.default.svc.cluster.local:9000
               stat_prefix: streams_total
           transport_api_version: V3
           clear_route_cache: true 
