@@ -13,11 +13,17 @@
 #   limitations under the License.
 
 # Example configurations for deploying ext-authz server separately in the mesh.
-
+apiVersion: v1
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: ext-authz
+---
 apiVersion: v1
 kind: Service
 metadata:
   name: ext-authz
+  namespace: ext-authz
   labels:
     app: ext-authz
 spec:
@@ -35,6 +41,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ext-authz
+  namespace: ext-authz
 spec:
   replicas: 1
   selector:
@@ -44,6 +51,7 @@ spec:
     metadata:
       labels:
         app: ext-authz
+        sidecar.istio.io/inject: "true"
     spec:
       containers:
       - image: gcr.io/istio-testing/ext-authz:latest
@@ -53,3 +61,11 @@ spec:
         - containerPort: 8000
         - containerPort: 9000
 ---
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-bookstoreserver
+  namespace: ext-authz
+spec:
+ rules:
+ - {}
