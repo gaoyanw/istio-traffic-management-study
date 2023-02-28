@@ -1,5 +1,5 @@
 {{- $chartVersion  := .Chart.AppVersion -}}
-{{- $repo  := .Values.image.repository -}}
+{{- $gcp_project  := .Values.gcp_project  -}}
 {{- $tag  := .Values.image.tag -}}
 {{- range $index, $version := .Values.versions }}
 apiVersion: apps/v1
@@ -21,7 +21,7 @@ spec:
     spec:
       serviceAccountName: httpserver
       containers:
-      - image: "{{ $repo }}:{{ $tag | default $chartVersion }}"
+      - image: "gcr.io/{{ $gcp_project }}/httpserver:{{ $tag | default $chartVersion }}"
         imagePullPolicy: IfNotPresent
         name: httpserver
         command:
