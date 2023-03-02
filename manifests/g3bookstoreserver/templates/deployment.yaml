@@ -1,16 +1,16 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "bookstoreserver.fullname" . }}
+  name: {{ include "g3bookstoreserver.fullname" . }}
   labels:
-    {{- include "bookstoreserver.labels" . | nindent 4 }}
+    {{- include "g3bookstoreserver.labels" . | nindent 4 }}
 spec:
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
   {{- end }}
   selector:
     matchLabels:
-      {{- include "bookstoreserver.selectorLabels" . | nindent 6 }}
+      {{- include "g3bookstoreserver.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -19,20 +19,21 @@ spec:
       {{- end }}
       labels:
         sidecar.istio.io/inject: "true"
-        {{- include "bookstoreserver.selectorLabels" . | nindent 8 }}
+        {{- include "g3bookstoreserver.selectorLabels" . | nindent 8 }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "bookstoreserver.serviceAccountName" . }}
+      serviceAccountName: {{ include "g3bookstoreserver.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
+            # gcr.io/cloudesf-codelab/g3bookstoreserver:latest
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          image: "{{ .Values.image.repository }}:latest"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - name: grpc

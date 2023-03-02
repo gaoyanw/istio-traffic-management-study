@@ -2,14 +2,14 @@
 apiVersion: autoscaling/v2beta1
 kind: HorizontalPodAutoscaler
 metadata:
-  name: {{ include "ext-proc-server.fullname" . }}
+  name: {{ include "resource-extractor.fullname" . }}
   labels:
-    {{- include "ext-proc-server.labels" . | nindent 4 }}
+    {{- include "resource-extractor.labels" . | nindent 4 }}
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: {{ include "ext-proc-server.fullname" . }}
+    name: {{ include "resource-extractor.fullname" . }}
   minReplicas: {{ .Values.autoscaling.minReplicas }}
   maxReplicas: {{ .Values.autoscaling.maxReplicas }}
   metrics:

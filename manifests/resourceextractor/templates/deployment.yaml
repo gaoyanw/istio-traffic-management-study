@@ -1,16 +1,16 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "ext-proc-server.fullname" . }}
+  name: {{ include "resource-extractor.fullname" . }}
   labels:
-    {{- include "ext-proc-server.labels" . | nindent 4 }}
+    {{- include "resource-extractor.labels" . | nindent 4 }}
 spec:
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
   {{- end }}
   selector:
     matchLabels:
-      {{- include "ext-proc-server.selectorLabels" . | nindent 6 }}
+      {{- include "resource-extractor.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -18,20 +18,34 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "ext-proc-server.selectorLabels" . | nindent 8 }}
+        {{- include "resource-extractor.selectorLabels" . | nindent 8 }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "ext-proc-server.serviceAccountName" . }}
+      serviceAccountName: {{ include "resource-extractor.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      volumes:
+      - name: cloudesf-configs
+      initContainers:
+      - name: "{{ .Chart.Name }}-init"
+        image: "gcr.io/cloudesf-codelab/cloudesf_init_bookstore-grpc_configs:latest"
+        volumeMounts:
+        - name: cloudesf-configs
+          # This mount path is hardcoded in the image, do not change.
+          mountPath: "/configs/inputs"
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          # gcr.io/cloudesf-codelab/resourceextractor:latest
+          image: "{{ .Values.image.repository }}:latest"
+          volumeMounts:
+          - name: cloudesf-configs
+            # This mount path is hardcoded in the image, do not change.
+            mountPath: "/configs/inputs"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - name: grpc

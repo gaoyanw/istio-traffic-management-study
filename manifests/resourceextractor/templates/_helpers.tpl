@@ -1,7 +1,7 @@
 {{/*
 Expand the name of the chart.
 */}}
-{{- define "ext-proc-server.name" -}}
+{{- define "resource-extractor.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
@@ -10,7 +10,7 @@ Create a default fully qualified app name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 If release name contains chart name it will be used as a full name.
 */}}
-{{- define "ext-proc-server.fullname" -}}
+{{- define "resource-extractor.fullname" -}}
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
@@ -26,16 +26,16 @@ If release name contains chart name it will be used as a full name.
 {{/*
 Create chart name and version as used by the chart label.
 */}}
-{{- define "ext-proc-server.chart" -}}
+{{- define "resource-extractor.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
 Common labels
 */}}
-{{- define "ext-proc-server.labels" -}}
-helm.sh/chart: {{ include "ext-proc-server.chart" . }}
-{{ include "ext-proc-server.selectorLabels" . }}
+{{- define "resource-extractor.labels" -}}
+helm.sh/chart: {{ include "resource-extractor.chart" . }}
+{{ include "resource-extractor.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
@@ -45,17 +45,17 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{/*
 Selector labels
 */}}
-{{- define "ext-proc-server.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "ext-proc-server.name" . }}
+{{- define "resource-extractor.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "resource-extractor.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
 Create the name of the service account to use
 */}}
-{{- define "ext-proc-server.serviceAccountName" -}}
+{{- define "resource-extractor.serviceAccountName" -}}
 {{- if .Values.serviceAccount.create }}
-{{- default (include "ext-proc-server.fullname" .) .Values.serviceAccount.name }}
+{{- default (include "resource-extractor.fullname" .) .Values.serviceAccount.name }}
 {{- else }}
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
