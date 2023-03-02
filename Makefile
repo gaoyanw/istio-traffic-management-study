@@ -11,7 +11,7 @@ docker-%:
 
 docker: docker-httpserver docker-extprocserver docker-bookstoreserver docker-bookstorehttpserver
 
-helm: docker helm-resourceextractor helm-httpserver helm-g3bookstoreserver helm-bookstorehttpserver
+helm: docker helm-resourceextractor  helm-g3bookstoreserver helm-extauthzserver helm-extauthz
 
 helm-%:
 	helm upgrade -i $* -n $* manifests/$* \
