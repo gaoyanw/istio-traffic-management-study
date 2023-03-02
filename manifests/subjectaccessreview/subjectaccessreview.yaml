@@ -1,0 +1,48 @@
+# this config create cluster role and cluster role bindings, setting up data for generating subject access review
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: api-client
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: api-client-sa
+  namespace: api-client
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: deployment-admin
+rules:
+- apiGroups: ["apps"]
+  resources: ["deployments"]
+  verbs: ["create", "get","list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: deployment-admin-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: deployment-admin
+subjects:
+- kind: ServiceAccount
+  name: api-client-sa
+  namespace: api-client
+# apiVersion: authorization.k8s.io/v1
+# kind: SubjectAccessReview
+# metadata:
+#   creationTimestamp: null
+# spec:
+#   resourceAttributes:
+#     group: apps
+#     namespace: bookstoreserver
+#     resource: deployments
+#     verb: create
+#   user: system:serviceaccount:api-client:api-client-sa
+# status:
+#   allowed: true
+#   reason: 'RBAC: allowed by ClusterRoleBinding "deployment-admin-binding" of ClusterRole
+#     "deployment-admin" to ServiceAccount "api-client-sa/api-client"'
