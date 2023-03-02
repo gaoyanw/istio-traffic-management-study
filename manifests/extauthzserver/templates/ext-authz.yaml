@@ -42,10 +42,32 @@ spec:
 apiVersion: security.istio.io/v1beta1
 kind: AuthorizationPolicy
 metadata:
-  name: allow-all
+  name: allow-certain-sa
 spec:
-# allow all traffic 
- rules:
- - {}
-# # -- deny all
+  action: ALLOW
+  rules:
+  - from:
+    - source:
+        principals: ["cluster.local/ns/default/sa/sleep"]
+    to:
+    - operation:
+        methods: ["*"]
+        paths: ["*"]
+# allow all - works
+# ---
+# apiVersion: security.istio.io/v1beta1
+# kind: AuthorizationPolicy
+# metadata:
+#   name: allow-all
+# spec:
+#   rules:
+#   - {}
+
+# Deny all - works
+# ---
+# apiVersion: security.istio.io/v1beta1
+# kind: AuthorizationPolicy
+# metadata:
+#   name: deny-all
+# spec:
 #   {}
