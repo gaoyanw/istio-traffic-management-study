@@ -9,9 +9,11 @@ PROTO_OUTS := $(PROTOS:.proto=.pb.go)
 docker-%:
 	./scripts/docker_push_if_needed.sh $(GCP_PROJECT) $* $(TAG)
 
-docker: docker-httpserver docker-extprocserver docker-bookstoreserver docker-bookstorehttpserver
+docker: docker-bookstoreserver docker-extauthzserver
+
 
 helm: docker helm-resourceextractor  helm-g3bookstoreserver helm-extauthzserver helm-extauthz
+
 
 helm-%:
 	helm upgrade -i $* -n $* manifests/$* \
