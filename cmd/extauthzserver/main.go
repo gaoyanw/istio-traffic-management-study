@@ -1,17 +1,3 @@
-// Copyright Istio Authors
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 package main
 
 import (
@@ -33,6 +19,10 @@ import (
 	"google.golang.org/genproto/googleapis/rpc/status"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	v1 "k8s.io/api/authorization/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 const (
@@ -140,16 +130,47 @@ func (s *extAuthzServerV3) deny(request *authv3.CheckRequest) *authv3.CheckRespo
 
 // Check implements gRPC v3 check request.
 func (s *extAuthzServerV3) Check(_ context.Context, request *authv3.CheckRequest) (*authv3.CheckResponse, error) {
-	attrs := request.GetAttributes()
-
-	// Determine whether to allow or deny the request.
-	allow := false
-	checkHeaderValue, contains := attrs.GetRequest().GetHttp().GetHeaders()[checkHeader]
-	if contains {
-		allow = checkHeaderValue == allowedValue
+	config, err := clientcmd.BuildConfigFromFlags("", "/cmd/extauthzserver/kubeconfig")
+	if err != nil {
+		if err != nil {
+			panic(err)
+		}
 	}
 
-	if allow {
+	// Create a Kubernetes clientset
+	clientset, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		panic(err)
+	}
+
+	group := "apps"
+	namespace := "bookstoreserver"
+	resource := "deployments"
+	verb := "create"
+
+	sar := &v1.SubjectAccessReview{
+		Spec: v1.SubjectAccessReviewSpec{
+			User: "system:serviceaccount:api-client:api-client-sa",
+			ResourceAttributes: &v1.ResourceAttributes{
+				Verb:      verb,
+				Resource:  resource,
+				Namespace: namespace,
+				Group:     group,
+			},
+		},
+	}
+
+	// // Create a SubjectAccessReview client
+	sarClient := clientset.AuthorizationV1().SubjectAccessReviews()
+
+	// // Send the SubjectAccessReview request
+	response, err := sarClient.Create(context.Background(), sar, metav1.CreateOptions{})
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(response.Status.Allowed)
+	if response.Status.Allowed {
 		return s.allow(request), nil
 	}
 
