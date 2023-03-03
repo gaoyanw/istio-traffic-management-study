@@ -33,6 +33,6 @@ spec:
               timeout:
                 seconds: 10
               google_grpc:
-                target_uri: extprocserver-ext-proc-server.extprocserver.svc.cluster.local:3443
+                target_uri: resourceextractor-ext-proc-server.resourceextractor.svc.cluster.local:3443
                 stat_prefix: waap
 

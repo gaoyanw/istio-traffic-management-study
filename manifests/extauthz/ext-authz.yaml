@@ -64,7 +64,7 @@ spec:
 apiVersion: security.istio.io/v1beta1
 kind: AuthorizationPolicy
 metadata:
-  name: allow-bookstoreserver
+  name: allow-g3bookstoreserver
   namespace: ext-authz
 spec:
  rules:
