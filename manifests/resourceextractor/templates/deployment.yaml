@@ -31,7 +31,7 @@ spec:
       - name: cloudesf-configs
       initContainers:
       - name: "{{ .Chart.Name }}-init"
-        image: "gcr.io/cloudesf-codelab/cloudesf_init_bookstore-grpc_configs:latest"
+        image: "gcr.io/yangguan-gke-dev/cloudesf_init_bookstore-grpc_configs:latest"
         volumeMounts:
         - name: cloudesf-configs
           # This mount path is hardcoded in the image, do not change.
