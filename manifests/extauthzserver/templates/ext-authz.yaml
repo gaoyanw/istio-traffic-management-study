@@ -71,3 +71,25 @@ spec:
 #   name: deny-all
 # spec:
 #   {}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: subjectaccessreview-creator
+rules:
+- apiGroups: ["authorization.k8s.io"]
+  resources: ["subjectaccessreviews"]
+  verbs: ["create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: subjectaccessreview-creator-binding
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: extauthzserver
+roleRef:
+  kind: ClusterRole
+  name: subjectaccessreview-creator
+  apiGroup: rbac.authorization.k8s.io
