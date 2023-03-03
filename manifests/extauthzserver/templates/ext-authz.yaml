@@ -38,30 +38,30 @@ spec:
         ports:
         - containerPort: 8000
         - containerPort: 9000
----
-apiVersion: security.istio.io/v1beta1
-kind: AuthorizationPolicy
-metadata:
-  name: allow-certain-sa
-spec:
-  action: ALLOW
-  rules:
-  - from:
-    - source:
-        principals: ["cluster.local/ns/default/sa/sleep"]
-    to:
-    - operation:
-        methods: ["*"]
-        paths: ["*"]
-# allow all - works
 # ---
 # apiVersion: security.istio.io/v1beta1
 # kind: AuthorizationPolicy
 # metadata:
-#   name: allow-all
+#   name: allow-certain-sa
 # spec:
+#   action: ALLOW
 #   rules:
-#   - {}
+#   - from:
+#     - source:
+#         principals: ["cluster.local/ns/default/sa/sleep"]
+#     to:
+#     - operation:
+#         methods: ["*"]
+#         paths: ["*"]
+# allow all - works
+---
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-all
+spec:
+  rules:
+  - {}
 
 # Deny all - works
 # ---
