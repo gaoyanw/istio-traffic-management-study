@@ -24,6 +24,7 @@ serviceAccount:
 
 podAnnotations:
   sidecar.istio.io/logLevel: "debug"
+  sidecar.istio.io/userVolumeMount: '[{"name":"proto-descriptor","mountPath":"/configs/inputs"}]'
 
 podSecurityContext: {}
   # fsGroup: 2000

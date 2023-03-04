@@ -19,6 +19,7 @@ helm-%:
 	helm upgrade -i $* -n $* manifests/$* \
 		--set image.tag=$(TAG) \
 		--set image.repository=gcr.io/$(GCP_PROJECT)/$* \
+		--set image.project=$(GCP_PROJECT) \
 		--create-namespace
 
 protos: $(PROTO_OUTS)

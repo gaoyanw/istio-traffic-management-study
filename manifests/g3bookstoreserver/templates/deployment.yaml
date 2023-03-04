@@ -28,6 +28,15 @@ spec:
       serviceAccountName: {{ include "g3bookstoreserver.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      volumes:
+      - name: proto-descriptor
+      initContainers:
+      - name: "proto-descriptor-init"
+        image: "gcr.io/{{ .Values.image.project }}/cloudesf_init_bookstore-grpc_configs:latest"
+        volumeMounts:
+        - name: proto-descriptor
+          # This mount path is hardcoded in the image, do not change.
+          mountPath: "/configs/inputs"
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
