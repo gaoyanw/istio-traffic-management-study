@@ -52,6 +52,7 @@ type (
 	extAuthzServerV3 struct{}
 )
 
+// TODO: switch to use proto
 type ResourceInfo struct {
 	Name       string `json:"name"`
 	Type       string `json:"type"`
