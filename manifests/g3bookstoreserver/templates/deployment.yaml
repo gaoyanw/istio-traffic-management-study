@@ -37,6 +37,7 @@ spec:
         - name: proto-descriptor
           # This mount path is hardcoded in the image, do not change.
           mountPath: "/configs/inputs"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
