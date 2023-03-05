@@ -9,8 +9,12 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
+	"strings"
 	"sync"
 	"syscall"
+
+	"encoding/json"
 
 	corev3 "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	authv3 "github.com/envoyproxy/go-control-plane/envoy/service/auth/v3"
@@ -20,6 +24,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	v1 "k8s.io/api/authorization/v1"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -47,6 +52,13 @@ type (
 	extAuthzServerV3 struct{}
 )
 
+type ResourceInfo struct {
+	Name       string `json:"name"`
+	Type       string `json:"type"`
+	Permission string `json:"permission"`
+	Container  string `json:"container"`
+}
+
 // ExtAuthzServer implements the ext_authz v2/v3 gRPC and HTTP check request API.
 type ExtAuthzServer struct {
 	grpcServer *grpc.Server
@@ -65,6 +77,10 @@ func (s *extAuthzServerV3) logRequest(allow string, request *authv3.CheckRequest
 		request.GetAttributes())
 }
 
+func (s *extAuthzServerV3) logRequest_debug(key string, value string) {
+	log.Printf("%s: %v", key, value)
+
+}
 func (s *extAuthzServerV3) allow(request *authv3.CheckRequest) *authv3.CheckResponse {
 	s.logRequest("allowed", request)
 	return &authv3.CheckResponse{
@@ -131,6 +147,8 @@ func (s *extAuthzServerV3) deny(request *authv3.CheckRequest) *authv3.CheckRespo
 
 // Check implements gRPC v3 check request.
 func (s *extAuthzServerV3) Check(_ context.Context, request *authv3.CheckRequest) (*authv3.CheckResponse, error) {
+
+	// 1. get the kubeconfig
 	var config *rest.Config
 	var err error
 	if os.Getenv("KUBERNETES_SERVICE_HOST") != "" && os.Getenv("KUBERNETES_SERVICE_PORT") != "" {
@@ -142,39 +160,54 @@ func (s *extAuthzServerV3) Check(_ context.Context, request *authv3.CheckRequest
 		panic(err)
 	}
 
-	// Create a Kubernetes clientset
+	// 2. Create a Kubernetes clientset
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		panic(err)
 	}
 
-	group := "apps"
-	namespace := "bookstoreserver"
-	resource := "deployments"
-	verb := "create"
+	// 3. extract user, and resource attributes from headers
+	headers := request.GetAttributes().GetRequest().GetHttp().GetHeaders()
+	resourceInforValue := headers["x-goog-resources-plain"]
+	var resourceInfo ResourceInfo
+	err2 := json.Unmarshal([]byte(resourceInforValue), &resourceInfo)
+	if err2 != nil {
+		log.Fatalf("Failed to unmarshal header value: %v", err)
+	}
+	user := headers["user"]
+	resource := strings.Split(resourceInfo.Type, "/")[1]
+	permissionSlice := strings.Split(resourceInfo.Permission, ".")
+	verb := permissionSlice[len(permissionSlice)-1]
+	namespace := strings.Split(resourceInfo.Container, "/")[1]
+	group := strings.Split(resourceInfo.Type, "/")[0]
 
+	s.logRequest_debug("user", user)
+	s.logRequest_debug("resource", resource)
+	s.logRequest_debug("verb", verb)
+	s.logRequest_debug("namespace", namespace)
+	s.logRequest_debug("group: ", group)
+
+	// 4. create SubjectAccessReview
 	sar := &v1.SubjectAccessReview{
 		Spec: v1.SubjectAccessReviewSpec{
-			User: "system:serviceaccount:api-client:api-client-sa",
+			User: user,
 			ResourceAttributes: &v1.ResourceAttributes{
-				Verb:      verb,
 				Resource:  resource,
+				Verb:      verb,
 				Namespace: namespace,
 				Group:     group,
 			},
 		},
 	}
-
-	// // Create a SubjectAccessReview client
 	sarClient := clientset.AuthorizationV1().SubjectAccessReviews()
-
-	// // Send the SubjectAccessReview request
 	response, err := sarClient.Create(context.Background(), sar, metav1.CreateOptions{})
+
+	s.logRequest_debug("SubjectAccessReview.status.allowed", strconv.FormatBool(response.Status.Allowed))
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Println(response.Status.Allowed)
+	// 5. send response to envoy
 	if response.Status.Allowed {
 		return s.allow(request), nil
 	}
