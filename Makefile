@@ -1,6 +1,6 @@
 GCP_PROJECT ?= $(shell gcloud config get-value core/project)
 PROTOC_GO_PLUGIN := $(shell which protoc-gen-go)
-TAG ?= $(shell git describe --always --tags --dirty)
+TAG ?= "v26"
 
 PROTOS := $(shell find pkg -name "*.proto")
 DESCRIPTORS := $(PROTOS:.proto=.pb)

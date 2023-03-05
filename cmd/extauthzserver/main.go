@@ -176,11 +176,13 @@ func (s *extAuthzServerV3) Check(_ context.Context, request *authv3.CheckRequest
 		log.Fatalf("Failed to unmarshal header value: %v", err)
 	}
 	user := headers["user"]
-	resource := strings.Split(resourceInfo.Type, "/")[1]
 	permissionSlice := strings.Split(resourceInfo.Permission, ".")
+	permissionSlice_slash := strings.Split(resourceInfo.Permission, "/")
+	resource := strings.Split(permissionSlice_slash[1], ".")[0]
+
 	verb := permissionSlice[len(permissionSlice)-1]
 	namespace := strings.Split(resourceInfo.Container, "/")[1]
-	group := strings.Split(resourceInfo.Type, "/")[0]
+	group := permissionSlice_slash[0]
 
 	s.logRequest_debug("user", user)
 	s.logRequest_debug("resource", resource)

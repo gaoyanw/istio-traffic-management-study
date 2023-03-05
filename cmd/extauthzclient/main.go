@@ -25,7 +25,7 @@ func main() {
 				Http: &authv3.AttributeContext_HttpRequest{
 					Host:    "34.29.235.94",
 					Path:    "/check",
-					Headers: map[string]string{"x-ext-authz": "deny", "x-goog-resources-plain": "{\"name\":\"namespaces/ns-foo\",\"type\":\"gdch-bookstore.googleapis.com/shelf\",\"permission\":\"gdch-bookstore.googleapis.com/shelves.create\",\"container\":\"namespaces/ns-foo\"}", "user": "system:serviceaccount:ns-foo:shelf-admin-sa"},
+					Headers: map[string]string{"x-goog-resources-plain": "{\"name\":\"namespaces/ns-foo\",\"type\":\"gdch-bookstore.googleapis.com/shelf\",\"permission\":\"gdch-bookstore.googleapis.com/shelves.create\",\"container\":\"namespaces/ns-foo\"}", "user": "system:serviceaccount:ns-foo:shelf-viewer-sa"},
 				},
 			},
 		},
