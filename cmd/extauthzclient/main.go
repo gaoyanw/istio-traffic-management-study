@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	conn, err := grpc.Dial("127.0.0.1:9000", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.Dial("34.29.235.94:9000", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
@@ -23,9 +23,9 @@ func main() {
 		Attributes: &authv3.AttributeContext{
 			Request: &authv3.AttributeContext_Request{
 				Http: &authv3.AttributeContext_HttpRequest{
-					Host:    "127.0.0.1",
+					Host:    "34.29.235.94",
 					Path:    "/check",
-					Headers: map[string]string{"x-ext-authz": "deny"},
+					Headers: map[string]string{"x-ext-authz": "deny", "x-goog-resources-plain": "{\"name\":\"namespaces/ns-foo\",\"type\":\"gdch-bookstore.googleapis.com/shelf\",\"permission\":\"gdch-bookstore.googleapis.com/shelves.create\",\"container\":\"namespaces/ns-foo\"}", "user": "system:serviceaccount:ns-foo:shelf-admin-sa"},
 				},
 			},
 		},
