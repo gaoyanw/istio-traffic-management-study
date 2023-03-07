@@ -86,16 +86,7 @@ func (s *extAuthzServerV3) allow(request *authv3.CheckRequest) *authv3.CheckResp
 	s.logRequest("allowed", request)
 	return &authv3.CheckResponse{
 		HttpResponse: &authv3.CheckResponse_OkResponse{
-			OkResponse: &authv3.OkHttpResponse{
-				Headers: []*corev3.HeaderValueOption{
-					{
-						Header: &corev3.HeaderValue{
-							Key:   receivedResourceHeader,
-							Value: getResoureInfo(request),
-						},
-					},
-				},
-			},
+			OkResponse: &authv3.OkHttpResponse{},
 		},
 		Status: &status.Status{Code: int32(codes.OK)},
 	}
@@ -185,6 +176,9 @@ func (s *extAuthzServerV3) Check(_ context.Context, request *authv3.CheckRequest
 			},
 		},
 	}
+	log.Printf("x-goog-resources-plain: %v", resourceInfoValue)
+	log.Printf("SubjectAccessReview request: %v", sar)
+
 	sarClient := clientset.AuthorizationV1().SubjectAccessReviews()
 	response, err := sarClient.Create(context.Background(), sar, metav1.CreateOptions{})
 
@@ -198,7 +192,7 @@ func (s *extAuthzServerV3) Check(_ context.Context, request *authv3.CheckRequest
 		return s.allow(request), nil
 	}
 
-	return s.deny(request, fmt.Sprintf("SubjectAccessReview failed resp: %v", response)), nil
+	return s.deny(request, fmt.Sprintf("SubjectAccessReview failed\nx-goog-resources-plain:%s,\nSubjectAccessReviewSpec:%v", resourceInfoValue, sar.Spec)), nil
 }
 
 // ServeHTTP implements the HTTP check request.
