@@ -1,6 +1,6 @@
 GCP_PROJECT ?= $(shell gcloud config get-value core/project)
 PROTOC_GO_PLUGIN := $(shell which protoc-gen-go)
-TAG ?= "v26"
+TAG := $(shell date '+%Y-%m-%d-%H-%M-%S')
 
 PROTOS := $(shell find pkg -name "*.proto")
 DESCRIPTORS := $(PROTOS:.proto=.pb)
@@ -11,8 +11,10 @@ docker-%:
 
 docker:docker-extauthzserver
 
+kubectl: 
+	kubectl apply -f manifests/subjectaccessreview/shelf-iewer-admin-sar.yaml
 
-helm: docker helm-resourceextractor  helm-g3bookstoreserver helm-extauthzserver setup-sa
+helm: docker helm-resourceextractor  helm-g3bookstoreserver helm-extauthzserver kubectl
 
 
 helm-%:
@@ -21,9 +23,6 @@ helm-%:
 		--set image.repository=gcr.io/$(GCP_PROJECT)/$* \
 		--set image.project=$(GCP_PROJECT) \
 		--create-namespace
-
-setup-sa:
-	kubectl apply -f manifests/subjectaccessreview/shelf-iewer-admin-sar.yaml
 
 protos: $(PROTO_OUTS)
 
