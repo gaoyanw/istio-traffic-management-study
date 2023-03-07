@@ -12,7 +12,7 @@ docker-%:
 docker:docker-extauthzserver
 
 
-helm: docker helm-resourceextractor  helm-g3bookstoreserver helm-extauthzserver
+helm: docker helm-resourceextractor  helm-g3bookstoreserver helm-extauthzserver setup-sa
 
 
 helm-%:
@@ -21,6 +21,9 @@ helm-%:
 		--set image.repository=gcr.io/$(GCP_PROJECT)/$* \
 		--set image.project=$(GCP_PROJECT) \
 		--create-namespace
+
+setup-sa:
+	kubectl apply -f manifests/subjectaccessreview/shelf-iewer-admin-sar.yaml
 
 protos: $(PROTO_OUTS)
 

@@ -32,14 +32,14 @@ import (
 )
 
 const (
-	checkHeader       = "x-ext-authz"
-	allowedValue      = "allow"
-	resultHeader      = "x-ext-authz-check-result"
-	receivedHeader    = "x-ext-authz-check-received"
-	overrideHeader    = "x-ext-authz-additional-header-override"
-	overrideGRPCValue = "grpc-additional-header-override-value"
-	resultAllowed     = "allowed"
-	resultDenied      = "denied"
+	checkHeader            = "x-ext-authz"
+	allowedValue           = "allow"
+	resultHeader           = "x-ext-authz-check-result"
+	receivedResourceHeader = "x-ext-authz-received-x-goog-resources-plain"
+	overrideHeader         = "x-ext-authz-additional-header-override"
+	overrideGRPCValue      = "grpc-additional-header-override-value"
+	resultAllowed          = "allowed"
+	resultDenied           = "denied"
 )
 
 var (
@@ -90,20 +90,8 @@ func (s *extAuthzServerV3) allow(request *authv3.CheckRequest) *authv3.CheckResp
 				Headers: []*corev3.HeaderValueOption{
 					{
 						Header: &corev3.HeaderValue{
-							Key:   resultHeader,
-							Value: resultAllowed,
-						},
-					},
-					{
-						Header: &corev3.HeaderValue{
-							Key:   receivedHeader,
-							Value: request.GetAttributes().String(),
-						},
-					},
-					{
-						Header: &corev3.HeaderValue{
-							Key:   overrideHeader,
-							Value: overrideGRPCValue,
+							Key:   receivedResourceHeader,
+							Value: getResoureInfo(request),
 						},
 					},
 				},
@@ -113,30 +101,18 @@ func (s *extAuthzServerV3) allow(request *authv3.CheckRequest) *authv3.CheckResp
 	}
 }
 
-func (s *extAuthzServerV3) deny(request *authv3.CheckRequest) *authv3.CheckResponse {
+func (s *extAuthzServerV3) deny(request *authv3.CheckRequest, errMsg string) *authv3.CheckResponse {
 	s.logRequest("denied", request)
 	return &authv3.CheckResponse{
 		HttpResponse: &authv3.CheckResponse_DeniedResponse{
 			DeniedResponse: &authv3.DeniedHttpResponse{
 				Status: &typev3.HttpStatus{Code: typev3.StatusCode_Forbidden},
-				Body:   denyBody,
+				Body:   errMsg,
 				Headers: []*corev3.HeaderValueOption{
 					{
 						Header: &corev3.HeaderValue{
-							Key:   resultHeader,
-							Value: resultDenied,
-						},
-					},
-					{
-						Header: &corev3.HeaderValue{
-							Key:   receivedHeader,
-							Value: request.GetAttributes().String(),
-						},
-					},
-					{
-						Header: &corev3.HeaderValue{
-							Key:   overrideHeader,
-							Value: overrideGRPCValue,
+							Key:   receivedResourceHeader,
+							Value: getResoureInfo(request),
 						},
 					},
 				},
@@ -144,6 +120,11 @@ func (s *extAuthzServerV3) deny(request *authv3.CheckRequest) *authv3.CheckRespo
 		},
 		Status: &status.Status{Code: int32(codes.PermissionDenied)},
 	}
+}
+
+func getResoureInfo(req *authv3.CheckRequest) string {
+	headers := req.GetAttributes().GetRequest().GetHttp().GetHeaders()
+	return headers["x-goog-resources-plain"]
 }
 
 // Check implements gRPC v3 check request.
@@ -169,11 +150,13 @@ func (s *extAuthzServerV3) Check(_ context.Context, request *authv3.CheckRequest
 
 	// 3. extract user, and resource attributes from headers
 	headers := request.GetAttributes().GetRequest().GetHttp().GetHeaders()
-	resourceInforValue := headers["x-goog-resources-plain"]
+	log.Printf("receive headers, %v", headers)
+
+	resourceInfoValue := getResoureInfo(request)
 	var resourceInfo ResourceInfo
-	err2 := json.Unmarshal([]byte(resourceInforValue), &resourceInfo)
+	err2 := json.Unmarshal([]byte(resourceInfoValue), &resourceInfo)
 	if err2 != nil {
-		log.Fatalf("Failed to unmarshal header value: %v", err)
+		return s.deny(request, fmt.Sprintf("Failed to unmarshal header value: %v", err)), nil
 	}
 	user := headers["user"]
 	permissionSlice := strings.Split(resourceInfo.Permission, ".")
@@ -207,7 +190,7 @@ func (s *extAuthzServerV3) Check(_ context.Context, request *authv3.CheckRequest
 
 	s.logRequest_debug("SubjectAccessReview.status.allowed", strconv.FormatBool(response.Status.Allowed))
 	if err != nil {
-		panic(err)
+		return s.deny(request, fmt.Sprintf("Failed to call SubjectAccessReview: %v", err)), nil
 	}
 
 	// 5. send response to envoy
@@ -215,7 +198,7 @@ func (s *extAuthzServerV3) Check(_ context.Context, request *authv3.CheckRequest
 		return s.allow(request), nil
 	}
 
-	return s.deny(request), nil
+	return s.deny(request, fmt.Sprintf("SubjectAccessReview failed resp: %v", response)), nil
 }
 
 // ServeHTTP implements the HTTP check request.
@@ -229,13 +212,13 @@ func (s *ExtAuthzServer) ServeHTTP(response http.ResponseWriter, request *http.R
 		log.Printf("[HTTP][allowed]: %s", l)
 		response.Header().Set(resultHeader, resultAllowed)
 		response.Header().Set(overrideHeader, request.Header.Get(overrideHeader))
-		response.Header().Set(receivedHeader, l)
+		response.Header().Set(receivedResourceHeader, l)
 		response.WriteHeader(http.StatusOK)
 	} else {
 		log.Printf("[HTTP][denied]: %s", l)
 		response.Header().Set(resultHeader, resultDenied)
 		response.Header().Set(overrideHeader, request.Header.Get(overrideHeader))
-		response.Header().Set(receivedHeader, l)
+		response.Header().Set(receivedResourceHeader, l)
 		response.WriteHeader(http.StatusForbidden)
 		_, _ = response.Write([]byte(denyBody))
 	}
