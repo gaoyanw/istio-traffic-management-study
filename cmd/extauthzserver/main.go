@@ -16,7 +16,6 @@ import (
 
 	"encoding/json"
 
-	corev3 "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	authv3 "github.com/envoyproxy/go-control-plane/envoy/service/auth/v3"
 	typev3 "github.com/envoyproxy/go-control-plane/envoy/type/v3"
 	"golang.org/x/net/context"
@@ -35,7 +34,7 @@ const (
 	checkHeader            = "x-ext-authz"
 	allowedValue           = "allow"
 	resultHeader           = "x-ext-authz-check-result"
-	receivedResourceHeader = "x-ext-authz-received-x-goog-resources-plain"
+	receivedResourceHeader = "x-ext-authz-received-x-goog-resources-json"
 	overrideHeader         = "x-ext-authz-additional-header-override"
 	overrideGRPCValue      = "grpc-additional-header-override-value"
 	resultAllowed          = "allowed"
@@ -99,14 +98,6 @@ func (s *extAuthzServerV3) deny(request *authv3.CheckRequest, errMsg string) *au
 			DeniedResponse: &authv3.DeniedHttpResponse{
 				Status: &typev3.HttpStatus{Code: typev3.StatusCode_Forbidden},
 				Body:   errMsg,
-				Headers: []*corev3.HeaderValueOption{
-					{
-						Header: &corev3.HeaderValue{
-							Key:   receivedResourceHeader,
-							Value: getResoureInfo(request),
-						},
-					},
-				},
 			},
 		},
 		Status: &status.Status{Code: int32(codes.PermissionDenied)},
@@ -115,7 +106,7 @@ func (s *extAuthzServerV3) deny(request *authv3.CheckRequest, errMsg string) *au
 
 func getResoureInfo(req *authv3.CheckRequest) string {
 	headers := req.GetAttributes().GetRequest().GetHttp().GetHeaders()
-	return headers["x-goog-resources-plain"]
+	return headers["x-goog-resources-json"]
 }
 
 // Check implements gRPC v3 check request.
@@ -176,7 +167,7 @@ func (s *extAuthzServerV3) Check(_ context.Context, request *authv3.CheckRequest
 			},
 		},
 	}
-	log.Printf("x-goog-resources-plain: %v", resourceInfoValue)
+	log.Printf("x-goog-resources-json: %v", resourceInfoValue)
 	log.Printf("SubjectAccessReview request: %v", sar)
 
 	sarClient := clientset.AuthorizationV1().SubjectAccessReviews()
@@ -192,7 +183,7 @@ func (s *extAuthzServerV3) Check(_ context.Context, request *authv3.CheckRequest
 		return s.allow(request), nil
 	}
 
-	return s.deny(request, fmt.Sprintf("SubjectAccessReview failed\nx-goog-resources-plain:%s,\nSubjectAccessReviewSpec:%v", resourceInfoValue, sar.Spec)), nil
+	return s.deny(request, fmt.Sprintf("SubjectAccessReview failed\nx-goog-resources-json:%s,\nSubjectAccessReviewSpec:%v", resourceInfoValue, sar.Spec)), nil
 }
 
 // ServeHTTP implements the HTTP check request.
